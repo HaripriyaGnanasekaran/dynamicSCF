@@ -1,4 +1,4 @@
-/*Dynamic SCF of polymer adsorption*/ 
+///*Dynamic SCF of polymer adsorption*/ 
 #include <math.h>
 #include <stdio.h>
 //COMPILE: g++ PolAds.cpp -lm -o PolAds     RUN: ./PolAds
