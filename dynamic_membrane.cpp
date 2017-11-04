@@ -55,9 +55,9 @@ main() {
 	while (time < endtime){
 	time++;
 		//begin loop to find the chemical potential corresponding to density k
-		double error = 1, eta=0.7;
+		double error = 1, eta=0.02;
 		int it=0;
-		while (error > tolerance && it < 1000) {
+		while (error > tolerance && it < 10000) {
 			it++;
 			s=1;
 			for (z=1; z<=M; z++) {
