@@ -1,5 +1,8 @@
 #include <math.h>
 #include <stdio.h>
+#include <iostream>
+#include <fstream>
+using namespace std;
 
 double tolerance = 1e-5, eta=0.1, error = 1;
 int it = 0, itmax=10000;
@@ -19,11 +22,17 @@ int main() {
   for (z = 1; z <= n_layers; z++) {u[z] = 0; phi[z]=phib; phi_solvent[z]=phib_solvent;}
   G[0][0]=0; 
 
-//bc
   phi[0]=0; phi_solvent[0]=0;
   phi[n_layers+1]=phi[n_layers]; phi_solvent[n_layers+1]=phi_solvent[n_layers];	
   int count=0;
-  double time=0.0, endtime=1000000, theta;
+  double time=0.0, endtime=1E6, theta;
+
+  ofstream rundata, profiledata, pa, pb, pc, pd, pe;
+  rundata.open("runlog.dat"); profiledata.open("profile.dat");
+  pa.open("pa.dat"); pb.open("pb.dat"); pc.open("pc.dat"); pd.open("pd.dat"); pe.open("pe.dat");
+  rundata << "time" << "\t" << "error" << "\t" << "theta" << endl;
+  profiledata << "layers" << "\t" << "phi-polymer" << "\t" << "phi-solvent"<< endl;
+ 
   /* Time evolution*/
   while(time < endtime){
 	time=time+0.1;
@@ -57,7 +66,11 @@ int main() {
 	for (z=1; z<=n_layers; z++){
         theta += phi[z] ; 
   	}
-   	if(count%1000 ==0) printf("time: %1e error: %1e theta: %1e\n", time, error, theta);
+	
+		
+   	rundata << time << "\t" << error << "\t" << theta << endl;
+
+
 	for (z=1;z<=n_layers; z++){
 		L[z]=phi[z]*phi_solvent[z]; 
 		alpha_s[z]=us[z];
@@ -79,9 +92,16 @@ int main() {
 		phi[z]+=0.1*J1[z];
 		phi_solvent[z]+=0.1*J2[z];
 	}
+
+  if(count==10000) for (z = 1; z <= n_layers; z++) pa << z << "\t" << phi[z] << "\t" << phi_solvent[z] << endl;
+  if(count==50000) for (z = 1; z <= n_layers; z++) pb << z << "\t" << phi[z] << "\t" << phi_solvent[z] << endl;
+  if(count==100000) for (z = 1; z <= n_layers; z++) pc << z << "\t" << phi[z] << "\t" << phi_solvent[z] << endl;
+  if(count==500000) for (z = 1; z <= n_layers; z++) pd << z << "\t" << phi[z] << "\t" << phi_solvent[z] << endl;
+  if(count==800000) for (z = 1; z <= n_layers; z++) pe << z << "\t" << phi[z] << "\t" << phi_solvent[z] << endl;
+
   }
-  for (z = 1; z <= n_layers; z++)
-  printf("z = %i phi = %1f phi_sol = %1f \n",z, phi[z], phi_solvent[z]);
-  printf("alpha: %1e uzero: %1e Lzero: %1e \n", alpha[0], u[0], L[0]);
+  for (z = 1; z <= n_layers; z++) profiledata << z << "\t" << phi[z] << "\t" << phi_solvent[z] << endl;
+
+  rundata.close(); profiledata.close();
   return 0;
 };
