@@ -102,7 +102,7 @@ main() {
 				rho_S[0]=rho_S[1]; rho_S[M+1]=rho_S[M]; //bc
 				error=0;
 			for (z=1; z<=M; z++) {
-				u_t[z]=eta*(rho_t[z]-phi_t[z]);
+				u_t[z]+=eta*(rho_t[z]-phi_t[z]);
 				error += pow((rho_t[z]-phi_t[z]),2);
 				u[z]+=eta*(rho_S[z]-phi_S[z]);
 				error += pow((rho_S[z]-phi_S[z]),2);
