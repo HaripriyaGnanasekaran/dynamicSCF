@@ -22,8 +22,10 @@ int main() {
   for (z = 1; z <= n_layers; z++) {u[z] = 0; phi[z]=phib; phi_solvent[z]=phib_solvent;}
   G[0][0]=0; 
 
+  // boundary conditions for densities. Adsorption problem has zero density at wall.
   phi[0]=0; phi_solvent[0]=0;
   phi[n_layers+1]=phi[n_layers]; phi_solvent[n_layers+1]=phi_solvent[n_layers];	
+
   int count=0;
   double time=0.0, endtime=1E6, theta;
 
@@ -33,6 +35,7 @@ int main() {
   rundata << "time" << "\t" << "error" << "\t" << "theta" << endl;
   profiledata << "layers" << "\t" << "phi-polymer" << "\t" << "phi-solvent"<< endl;
  
+
   /* Time evolution*/
   while(time < endtime){
 	time=time+0.1;
