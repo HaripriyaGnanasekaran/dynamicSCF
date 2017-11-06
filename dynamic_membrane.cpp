@@ -18,7 +18,7 @@ main() {
 	int z,s,jz=M+2;
 	double phi_t[jz], phi_h[jz], phi_S[jz];
 	double rho_t[jz], rho_h[jz], rho_S[jz];
-	double et[jz],eh[jz],eS[jz], Lt[jz], Lh[jz], LS[jz], bU1[jz],bU2[jz], bU3[jz], J1[jz], J2[jz], J3[jz];
+	double et[jz],eh[jz],eS[jz], Lht[jz], Lhs[jz], Lst[jz], bU1[jz],bU2[jz], bU3[jz], bU4[jz], J1[jz], J2[jz], J3[jz];
 	double u_t[jz], u[jz], u_h[jz], w_t[jz], w[jz], G1_t[jz], G1[jz], alpha[jz];
 	int delta[38]; //Kronicker delta’s for specifying chain architecture.310
 
@@ -127,22 +127,24 @@ main() {
 	//onsagers coefficients
 	for (z=1; z<=M; z++){
 		//Diffusion coefficients are probably wrong
-		Lh[z]=phi_h[z]*phi_S[z] + phi_h[z]*phi_t[z];
-		Lt[z]=phi_t[z]*phi_S[z] + phi_t[z]*phi_h[z];
-		LS[z]=phi_S[z]*phi_h[z] + phi_S[z]*phi_t[z];
+		Lhs[z]=phi_h[z]*phi_S[z];// + phi_h[z]*phi_t[z];
+		Lht[z]=phi_h[z]*phi_t[z];// + phi_t[z]*phi_h[z];
+		Lst[z]=phi_S[z]*phi_t[z];// + phi_S[z]*phi_t[z];
 		//this seems ok as u3 = -(u2+u1). but should be checked too. 
-		bU1[z]=et[z]-eS[z] + et[z]-eh[z];
-		bU2[z]=eS[z]-et[z] + eS[z]-eh[z];
-		bU3[z]=eh[z]-et[z] + eh[z]-eS[z];
+		bU1[z]=et[z]-eS[z];// + et[z]-eh[z];
+		bU2[z]=et[z]-eh[z];// + eS[z]-eh[z];
+		bU3[z]=eS[z]-et[z];// + eh[z]-eS[z];
+		bU4[z]=eS[z]-eh[z];//
 		}
 	// boundary conditions to onsager coeff. required for flux calculation
-	Lh[M+1]=Lh[M]; Lt[M+1]=Lt[M]; LS[M+1]=LS[M]; bU1[M+1]=0; bU2[M+1]=0; bU3[M+1]=0;
-	Lh[0]=Lh[1]; Lt[0] = Lt[1]; LS[0]=LS[1]; bU1[0]=bU1[1]; bU2[0]=bU2[1]; bU3[0]=bU3[1];
+	Lhs[M+1]=Lhs[M]; Lht[M+1]=Lht[M]; Lst[M+1]=Lst[M]; bU1[M+1]=0; bU2[M+1]=0; bU3[M+1]=0; bU4[M+1]=0;
+	Lhs[0]=Lhs[1]; Lht[0] = Lht[1]; Lst[0]=Lst[1]; bU1[0]=bU1[1]; bU2[0]=bU2[1]; bU3[0]=bU3[1]; bU4[0]=bU4[1];
 	// flux calculation and density update.
 	for (z=1; z<=M; z++) {
-		J1[z]=-0.50*(((Lt[z]+Lt[z+1])*(bU1[z+1]-bU1[z]))-((Lt[z-1]+Lt[z])*(bU1[z]-bU1[z-1]))); 
-		J2[z]=-0.50*(((LS[z]+LS[z+1])*(bU2[z+1]-bU2[z]))-((LS[z-1]+LS[z])*(bU2[z]-bU2[z-1])));
-		J3[z]=-0.50*(((Lh[z]+Lh[z+1])*(bU3[z+1]-bU3[z]))-((Lh[z-1]+Lh[z])*(bU3[z]-bU3[z-1])));//J3 violates compressibility, probably because of wrong onsager coeff. 
+		J1[z]=-0.50*(((Lst[z]+Lst[z+1])*(bU1[z+1]-bU1[z]))-((Lst[z-1]+Lst[z])*(bU1[z]-bU1[z-1])));
+		J1[z] += -0.50*(((Lht[z]+Lht[z+1])*(bU2[z+1]-bU2[z]))-((Lht[z-1]+Lht[z])*(bU2[z]-bU2[z-1]))); 
+		J2[z]=-0.50*(((Lst[z]+Lst[z+1])*(bU3[z+1]-bU3[z]))-((Lst[z-1]+Lst[z])*(bU3[z]-bU3[z-1])));
+		J2[z] +=-0.50*(((Lhs[z]+Lhs[z+1])*(bU4[z+1]-bU4[z]))-((Lhs[z-1]+Lhs[z])*(bU4[z]-bU4[z-1])));//J3 violates compressibility, probably because of wrong onsager coeff. 
 		phi_t[z]+=0.001*J1[z];
 		phi_S[z]+=0.001*J2[z];
 		phi_h[z]-=0.001*(J1[z]+J2[z]);
