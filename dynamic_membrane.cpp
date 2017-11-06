@@ -121,7 +121,7 @@ main() {
 	for (z=1; z<=M; z++){
 		et[z]=u_t[z]-chi*((phi_h[z-1]+phi_h[z]+phi_h[z+1])/3-phib*5/37+(phi_S[z-1]+phi_S[z]+phi_S[z+1])/3-phib_S);
 		eS[z]=u[z]-chi*((phi_t[z-1]+phi_t[z]+phi_t[z+1])/3-phib*32/37);
-		eh[z]=u_h[z];
+		eh[z]=u_h[z]-chi*((phi_t[z-1]+phi_t[z]+phi_t[z+1])/3-phib*32/37);
 	}
 
 	//onsagers coefficients
@@ -149,8 +149,8 @@ main() {
 		phi_S[z]+=0.001*J2[z];
 		phi_h[z]-=0.001*(J1[z]+J2[z]);
 		}
-	if(time == 3 )for (z=1; z<=M; z++) printf("z = %i phi_t = %1f rho_t = %1f phi_S = %1f\n",z, phi_t[z], phi_h[z], phi_S[z]);
+	if(time == 3 )for (z=1; z<=M; z++) printf("z = %i phi_t = %1f phi_h = %1f phi_S = %1f\n",z, phi_t[z], phi_h[z], phi_S[z]);
 	}
-	for (z=1; z<=M; z++) printf("z = %i phi_t = %1f rho_t = %1f phi_S = %1f\n",z, phi_t[z], phi_h[z], phi_S[z]);
+	for (z=1; z<=M; z++) printf("z = %i phi_t = %1f phi_h = %1f phi_S = %1f\n",z, phi_t[z], phi_h[z], phi_S[z]);
 	return(0);
 };
