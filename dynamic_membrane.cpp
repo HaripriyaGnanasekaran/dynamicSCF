@@ -53,7 +53,7 @@ main() {
 
 	// rough guess the density
 	// begin time loop
-	int time=0, endtime=10;
+	int time=0, endtime=100;
 	while (time < endtime){
 	time++;
 		//begin loop to find the chemical potential corresponding to density k
@@ -114,7 +114,7 @@ main() {
 				//error += pow((rho_t[z]+rho_h[z]+rho_S[z]-1),2);
 			}
 			error=sqrt(error);
-			printf("it = %i error = %1e \n",it,error);
+			//printf("it = %i error = %1e \n",it,error);
 		}
 	// compute alpha for all segment types
 	// we do not update the density of head group as it is solved based on compressibility relation. Initial guess also satisfies compressibilty
@@ -126,27 +126,28 @@ main() {
 
 	//onsagers coefficients
 	for (z=1; z<=M; z++){
+		//Diffusion coefficients are probably wrong
 		Lh[z]=phi_h[z]*phi_S[z] + phi_h[z]*phi_t[z];
 		Lt[z]=phi_t[z]*phi_S[z] + phi_t[z]*phi_h[z];
 		LS[z]=phi_S[z]*phi_h[z] + phi_S[z]*phi_t[z];
+		//this seems ok as u3 = -(u2+u1). but should be checked too. 
 		bU1[z]=et[z]-eS[z] + et[z]-eh[z];
 		bU2[z]=eS[z]-et[z] + eS[z]-eh[z];
 		bU3[z]=eh[z]-et[z] + eh[z]-eS[z];
 		}
+	// boundary conditions to onsager coeff. required for flux calculation
 	Lh[M+1]=Lh[M]; Lt[M+1]=Lt[M]; LS[M+1]=LS[M]; bU1[M+1]=0; bU2[M+1]=0; bU3[M+1]=0;
 	Lh[0]=Lh[1]; Lt[0] = Lt[1]; LS[0]=LS[1]; bU1[0]=bU1[1]; bU2[0]=bU2[1]; bU3[0]=bU3[1];
+	// flux calculation and density update.
 	for (z=1; z<=M; z++) {
-		J1[z]=-0.50*(((Lt[z]+Lt[z+1])*(bU1[z+1]-bU1[z]))-((Lt[z-1]+Lt[z])*(bU1[z]-bU1[z-1]))); //flux with sovent
+		J1[z]=-0.50*(((Lt[z]+Lt[z+1])*(bU1[z+1]-bU1[z]))-((Lt[z-1]+Lt[z])*(bU1[z]-bU1[z-1]))); 
 		J2[z]=-0.50*(((LS[z]+LS[z+1])*(bU2[z+1]-bU2[z]))-((LS[z-1]+LS[z])*(bU2[z]-bU2[z-1])));
-		J3[z]=-0.50*(((Lh[z]+Lh[z+1])*(bU3[z+1]-bU3[z]))-((Lh[z-1]+Lh[z])*(bU3[z]-bU3[z-1])));
+		J3[z]=-0.50*(((Lh[z]+Lh[z+1])*(bU3[z+1]-bU3[z]))-((Lh[z-1]+Lh[z])*(bU3[z]-bU3[z-1])));//J3 violates compressibility, probably because of wrong onsager coeff. 
 		phi_t[z]+=0.001*J1[z];
 		phi_S[z]+=0.001*J2[z];
 		phi_h[z]-=0.001*(J1[z]+J2[z]);
 		}
-	// alphas are used to find the flux and not u
-	//use u @k to find the flux at lattices
-	//find the density @k+1
-	//end loop
+	if(time == 3 )for (z=1; z<=M; z++) printf("z = %i phi_t = %1f rho_t = %1f phi_S = %1f\n",z, phi_t[z], phi_h[z], phi_S[z]);
 	}
 	for (z=1; z<=M; z++) printf("z = %i phi_t = %1f rho_t = %1f phi_S = %1f\n",z, phi_t[z], phi_h[z], phi_S[z]);
 	return(0);
