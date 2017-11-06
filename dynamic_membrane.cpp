@@ -10,7 +10,7 @@ int M = 50; //system size in lattice layers, equivalent to n\_layers =50
 int N = 37; //2x16 + 5 //two tails + 1 head: total length of the lipid.
 double theta = 4.15165700; //amount of lipid in the system for tensionless bilayer
 double chi=1.6; //interaction parameter for polar-apolar interactions
-double tolerance = 1e-7;
+double tolerance = 1e-5;
 double q, phib, phib_S;
 
 //Main program starts here
@@ -18,6 +18,7 @@ main() {
 	int z,s,jz=M+2;
 	double phi_t[jz], phi_h[jz], phi_S[jz];
 	double rho_t[jz], rho_h[jz], rho_S[jz];
+	double et[jz],eh[jz],eS[jz];
 	double u_t[jz], u[jz], w_t[jz], w[jz], G1_t[jz], G1[jz], alpha[jz];
 	int delta[38]; //Kronicker delta’s for specifying chain architecture.310
 
@@ -47,7 +48,8 @@ main() {
 
 	double G_f[jz*N], G_b[jz*N];
 	double a,b,c,gz;
-	alpha[0] = 0; u_t[0]=0; u[0]=0;
+	for (z=0; z<=M; z++){
+	alpha[z] = 0; u_t[z]=0; u[z]=0;}
 
 	// rough guess the density
 	// begin time loop
@@ -55,7 +57,7 @@ main() {
 	while (time < endtime){
 	time++;
 		//begin loop to find the chemical potential corresponding to density k
-		double error = 1, eta=0.02;
+		double error = 1, eta=0.082;
 		int it=0;
 		while (error > tolerance && it < 10000) {
 			it++;
@@ -106,16 +108,35 @@ main() {
 				error += pow((rho_t[z]-phi_t[z]),2);
 				u[z]+=eta*(rho_S[z]-phi_S[z]);
 				error += pow((rho_S[z]-phi_S[z]),2);
-				alpha[z] += eta*(rho_t[z]+rho_h[z]+rho_S[z]-1);
-				error += pow((rho_t[z]+rho_h[z]+rho_S[z]-1),2);
+				//alpha[z] += eta*(rho_t[z]+rho_h[z]+rho_S[z]-1);
+				//error += pow((rho_t[z]+rho_h[z]+rho_S[z]-1),2);
 			}
 			error=sqrt(error);
 			printf("it = %i error = %1e \n",it,error);
 		}
+	// compute alpha for all segment types
+
+	for (z=1; z<=M; z++){
+		et[z]=u_t[z]-chi*((phi_h[z-1]+phi_h[z]+phi_h[z+1])/3-phib*5/37+(phi_S[z-1]+phi_S[z]+phi_S[z+1])/3-phib_S);
+//		eh[z]=u_h[z]; // this is because the interaction of h with solvent and tail is zero.
+		eS[z]=u[z]-chi*((phi_t[z-1]+phi_t[z]+phi_t[z+1])/3-phib*32/37);
+	}
+
+
+	//
+//	int t;
+//	for (s=1; s<=3; s++){
+//		t=s+1;
+//		while (t<=3){
+//			for (z=1; z<=M; z++){
+//			
+//			}
+//		}
+//	}
 	//use u @k to find the flux at lattices
 	//find the density @k+1
 	//end loop
 	}
-	for (z=1; z<=M; z++) printf("z = %i phi_t = %1f rho_t = %1f phi_S = %1f\n",z, rho_t[z], rho_h[z], rho_S[z]);
+	for (z=1; z<=M; z++) printf("z = %i phi_t = %1f rho_t = %1f phi_S = %1f\n",z, u_t[z], et[z], u[z]);
 	return(0);
 };
