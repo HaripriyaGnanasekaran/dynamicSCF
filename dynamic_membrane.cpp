@@ -18,8 +18,8 @@ main() {
 	int z,s,jz=M+2;
 	double phi_t[jz], phi_h[jz], phi_S[jz];
 	double rho_t[jz], rho_h[jz], rho_S[jz];
-	double et[jz],eh[jz],eS[jz];
-	double u_t[jz], u[jz], w_t[jz], w[jz], G1_t[jz], G1[jz], alpha[jz];
+	double et[jz],eh[jz],eS[jz], Lt[jz], Lh[jz], LS[jz], bU1[jz],bU2[jz], bU3[jz], J1[jz], J2[jz], J3[jz];
+	double u_t[jz], u[jz], u_h[jz], w_t[jz], w[jz], G1_t[jz], G1[jz], alpha[jz];
 	int delta[38]; //Kronicker delta’s for specifying chain architecture.310
 
 	for (s=1; s<=37; s++) delta[s]=0; for (s=17; s<=21; s++) delta[s]=1; 
@@ -53,7 +53,7 @@ main() {
 
 	// rough guess the density
 	// begin time loop
-	int time=0, endtime=2;
+	int time=0, endtime=10;
 	while (time < endtime){
 	time++;
 		//begin loop to find the chemical potential corresponding to density k
@@ -108,6 +108,8 @@ main() {
 				error += pow((rho_t[z]-phi_t[z]),2);
 				u[z]+=eta*(rho_S[z]-phi_S[z]);
 				error += pow((rho_S[z]-phi_S[z]),2);
+				u_h[z]+=eta*(rho_h[z]-phi_h[z]);
+				error += pow((rho_h[z]-phi_h[z]),2);
 				//alpha[z] += eta*(rho_t[z]+rho_h[z]+rho_S[z]-1);
 				//error += pow((rho_t[z]+rho_h[z]+rho_S[z]-1),2);
 			}
@@ -115,28 +117,37 @@ main() {
 			printf("it = %i error = %1e \n",it,error);
 		}
 	// compute alpha for all segment types
-
+	// we do not update the density of head group as it is solved based on compressibility relation. Initial guess also satisfies compressibilty
 	for (z=1; z<=M; z++){
 		et[z]=u_t[z]-chi*((phi_h[z-1]+phi_h[z]+phi_h[z+1])/3-phib*5/37+(phi_S[z-1]+phi_S[z]+phi_S[z+1])/3-phib_S);
-//		eh[z]=u_h[z]; // this is because the interaction of h with solvent and tail is zero.
 		eS[z]=u[z]-chi*((phi_t[z-1]+phi_t[z]+phi_t[z+1])/3-phib*32/37);
+		eh[z]=u_h[z];
 	}
 
-
-	//
-//	int t;
-//	for (s=1; s<=3; s++){
-//		t=s+1;
-//		while (t<=3){
-//			for (z=1; z<=M; z++){
-//			
-//			}
-//		}
-//	}
+	//onsagers coefficients
+	for (z=1; z<=M; z++){
+		Lh[z]=phi_h[z]*phi_S[z] + phi_h[z]*phi_t[z];
+		Lt[z]=phi_t[z]*phi_S[z] + phi_t[z]*phi_h[z];
+		LS[z]=phi_S[z]*phi_h[z] + phi_S[z]*phi_t[z];
+		bU1[z]=et[z]-eS[z] + et[z]-eh[z];
+		bU2[z]=eS[z]-et[z] + eS[z]-eh[z];
+		bU3[z]=eh[z]-et[z] + eh[z]-eS[z];
+		}
+	Lh[M+1]=Lh[M]; Lt[M+1]=Lt[M]; LS[M+1]=LS[M]; bU1[M+1]=0; bU2[M+1]=0; bU3[M+1]=0;
+	Lh[0]=Lh[1]; Lt[0] = Lt[1]; LS[0]=LS[1]; bU1[0]=bU1[1]; bU2[0]=bU2[1]; bU3[0]=bU3[1];
+	for (z=1; z<=M; z++) {
+		J1[z]=-0.50*(((Lt[z]+Lt[z+1])*(bU1[z+1]-bU1[z]))-((Lt[z-1]+Lt[z])*(bU1[z]-bU1[z-1]))); //flux with sovent
+		J2[z]=-0.50*(((LS[z]+LS[z+1])*(bU2[z+1]-bU2[z]))-((LS[z-1]+LS[z])*(bU2[z]-bU2[z-1])));
+		J3[z]=-0.50*(((Lh[z]+Lh[z+1])*(bU3[z+1]-bU3[z]))-((Lh[z-1]+Lh[z])*(bU3[z]-bU3[z-1])));
+		phi_t[z]+=0.001*J1[z];
+		phi_S[z]+=0.001*J2[z];
+		phi_h[z]-=0.001*(J1[z]+J2[z]);
+		}
+	// alphas are used to find the flux and not u
 	//use u @k to find the flux at lattices
 	//find the density @k+1
 	//end loop
 	}
-	for (z=1; z<=M; z++) printf("z = %i phi_t = %1f rho_t = %1f phi_S = %1f\n",z, u_t[z], et[z], u[z]);
+	for (z=1; z<=M; z++) printf("z = %i phi_t = %1f rho_t = %1f phi_S = %1f\n",z, phi_t[z], phi_h[z], phi_S[z]);
 	return(0);
 };
